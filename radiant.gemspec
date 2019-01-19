@@ -9,9 +9,11 @@ Gem::Specification.new do |spec|
   spec.version     = Radiant::VERSION
   spec.authors     = ["Benny Degezelle"]
   spec.email       = ["hi@monkeypatch.be"]
-  spec.homepage    = "TODO"
-  spec.summary     = "TODO: Summary of Radiant."
-  spec.description = "TODO: Description of Radiant."
+  spec.homepage    = "http://radiantcms.org"
+  spec.summary     = "Radiant is a simple and powerful publishing system designed for small teams.
+It is built with Rails and is similar to Textpattern or MovableType, but is
+a general purpose content managment system--not merely a blogging engine."
+  spec.description = "Probably the best CMS in the world"
   spec.license     = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
@@ -28,4 +30,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rails", "~> 5.2.2"
 
   spec.add_development_dependency "sqlite3"
+  spec.add_development_dependency "rspec", "~> 3.8.0"
+  spec.add_development_dependency "rspec-rails", "~> 3.8.2"
 end
