@@ -31,4 +31,5 @@ a general purpose content managment system--not merely a blogging engine."
 
   spec.add_development_dependency "sqlite3"
   spec.add_development_dependency "rspec-rails", "~> 3.8.2"
+  spec.add_development_dependency "factory_bot_rails"
 end
