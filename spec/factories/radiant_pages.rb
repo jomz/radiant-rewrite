@@ -52,10 +52,10 @@ FactoryBot.define do
     end
     
     factory :home do |home|
-      title 'Home'
-      slug '/'
+      title { 'Home' }
+      slug { '/' }
       # status_id Status[:published].id
-      parent_id nil
+      parent_id { nil }
     end
     
   end
