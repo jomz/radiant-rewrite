@@ -28,7 +28,7 @@ FactoryBot.define do
     end
 
     factory :published_page do
-      # status_id Status[:published].id
+      status_id { Radiant::Status[:published].id }
 
       factory :article do
         title { generate(:article_title)}
@@ -54,7 +54,7 @@ FactoryBot.define do
     factory :home do |home|
       title { 'Home' }
       slug { '/' }
-      # status_id Status[:published].id
+      status_id { Radiant::Status[:published].id }
       parent_id { nil }
     end
     
