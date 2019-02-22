@@ -10,7 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_19_230949) do
+ActiveRecord::Schema.define(version: 2019_02_22_034538) do
+
+  create_table "radiant_page_parts", force: :cascade do |t|
+    t.string "name"
+    t.text "content"
+    t.string "filter_id"
+    t.integer "page_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["page_id", "name"], name: "parts_by_page"
+  end
 
   create_table "radiant_pages", force: :cascade do |t|
     t.string "title"
