@@ -6,6 +6,8 @@ module Radiant
       def initialize(message = 'Database missing root page'); super end
     end
     
+    before_save :update_status
+
     has_many :parts, ->{ order(:id) }, class_name: 'Radiant::PagePart', dependent: :destroy
     accepts_nested_attributes_for :parts, allow_destroy: true
 
@@ -101,6 +103,17 @@ module Radiant
 
     def status=(value)
       self.status_id = value.id
+    end
+
+    def update_status
+      self.published_at = Time.zone.now if published? && self.published_at == nil
+
+      if self.published_at != nil && (published? || scheduled?)
+        self[:status_id] = Status[:scheduled].id if self.published_at  > Time.zone.now
+        self[:status_id] = Status[:published].id if self.published_at <= Time.zone.now
+      end
+
+      true
     end
 
     def valid_class_name

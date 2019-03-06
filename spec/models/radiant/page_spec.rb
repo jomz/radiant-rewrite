@@ -222,5 +222,35 @@ module Radiant
         expect(page.dirty?).to be true
       end
     end
+    
+    context 'when setting the published_at date' do
+      let(:future){ Time.current + 20.years }
+      let(:past){ Time.current - 1.year }
+      let(:future_scheduled){
+        build(:page, status_id: Status[:published].id, published_at: future)
+      }
+      let(:past_scheduled){
+        build(:page, status_id: Status[:scheduled].id, published_at: past)
+      }
+
+      it 'should change its status to scheduled with a date in the future' do
+        future_scheduled.save
+
+        expect(future_scheduled.status_id).to eq(Status[:scheduled].id)
+      end
+
+      it 'should set the status to published when the date is in the past' do
+        past_scheduled.save
+
+        expect(past_scheduled.status_id).to eq(Status[:published].id)
+      end
+
+      xit 'should interpret the input date correctly when the current language is not English' do
+        I18n.locale = :nl
+        page.update_attribute(:published_at, "17 mei 2011")
+        I18n.locale = :en
+        expect(page.published_at.to_s(:db)).to eq('2013-05-17 00:00:00')
+      end
+    end
   end
 end
