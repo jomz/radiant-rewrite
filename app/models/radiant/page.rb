@@ -59,6 +59,14 @@ module Radiant
       !parent.nil?
     end
     
+    def part(name)
+      if new_record? or parts.to_a.any?(&:new_record?)
+        parts.to_a.find {|p| p.name == name.to_s }
+      else
+        parts.find_by(name: name.to_s)
+      end
+    end
+    
     def path
       if parent?
         parent.child_path(self)

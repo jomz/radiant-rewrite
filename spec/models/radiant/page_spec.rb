@@ -130,5 +130,44 @@ module Radiant
         expect(page.path).to match(/\/\z/)
       end
     end
+    
+    describe '#parts' do
+      it 'should return PageParts with a page_id of the page id' do
+        page.save
+        page.parts.create(name: 'body')
+        page.parts.create(name: 'sidebar')
+        expect(page.parts.sort_by{|p| p.name }).to eq(Radiant::PagePart.where(page_id: page.id).sort_by{|p| p.name })
+      end
+    end
+    
+    it 'should destroy dependant parts' do
+      page.save
+      page.parts.create(name: 'test')
+      expect(page.parts.find_by_name('test')).not_to be_nil
+      id = page.id
+      page.destroy
+      expect(Radiant::PagePart.find_by_page_id(id)).to be_nil
+    end
+    
+    describe '#part' do
+      before do
+        page.save
+        page.parts.create(name: 'body')
+      end
+      it 'should find the part with a name of the given string' do
+        expect(page.part('body')).to eq(page.parts.find_by_name('body'))
+      end
+      it 'should find the part with a name of the given symbol' do
+        expect(page.part(:body)).to eq(page.parts.find_by_name('body'))
+      end
+      it 'should access unsaved parts by name' do
+        part = page.parts.build name: 'test'
+        expect(page.part('test')).to eq(part)
+        expect(page.part(:test)).to eq(part)
+      end
+      it 'should return nil for an invalid part name' do
+        expect(page.part('not-real')).to be_nil
+      end
+    end
   end
 end
