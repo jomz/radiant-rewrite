@@ -169,5 +169,58 @@ module Radiant
         expect(page.part('not-real')).to be_nil
       end
     end
+
+    describe '#has_part?' do
+      it 'should return true for a valid part' do
+        page.parts.build(name: 'body', content: 'Hello world!')
+        expect(page.has_part?('body')).to eq(true)
+        expect(page.has_part?(:body)).to eq(true)
+      end
+      it 'should return false for a non-existant part' do
+        expect(page.has_part?('obviously_false_part_name')).to eq(false)
+        expect(page.has_part?(:obviously_false_part_name)).to eq(false)
+      end
+    end
+
+    describe '#inherits_part?' do
+      let(:child) { page.children.build(parent: page, slug: 'child') }
+      it 'should return false if any ancestor page does not have a part of the given name' do
+        expect(child.inherits_part?(:sidebar)).to be false
+      end
+      it 'should return true if any ancestor page has a part of the given name' do
+        page.parts.build(name: 'sidebar')
+        expect(child.has_part?(:sidebar)).to be false
+        expect(child.inherits_part?(:sidebar)).to be true
+      end
+    end
+
+    describe '#has_or_inherits_part?' do
+      let(:child) { page.children.build(parent: page, slug: 'child') }
+      before do
+        page.parts.build(name: 'sidebar')
+      end
+      it 'should return true if the current page or any ancestor has a part of the given name' do
+        expect(child.has_or_inherits_part?(:sidebar)).to be true
+      end
+      it 'should return false if the current part or any ancestor does not have a part of the given name' do
+        expect(child.has_or_inherits_part?(:obviously_false_part_name)).to be false
+      end
+    end
+
+    it "should accept new page parts as an array of PageParts" do
+      page.parts = [Radiant::PagePart.new(name: 'body', content: 'Hello, world!')]
+      expect(page.parts.size).to eq(1)
+      expect(page.parts.first).to be_kind_of(PagePart)
+      expect(page.parts.first.name).to eq('body')
+      expect(page.parts.first.content).to eq('Hello, world!')
+    end
+
+    it "should dirty the page object when only changing parts" do
+      lambda do
+        expect(page.dirty?).to be false
+        page.parts = [Radiant::PagePart.new(name: 'body', content: 'Hello, world!')]
+        expect(page.dirty?).to be true
+      end
+    end
   end
 end

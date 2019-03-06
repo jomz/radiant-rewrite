@@ -50,6 +50,18 @@ module Radiant
         end
       end
     end
+    
+    def has_part?(name)
+      !part(name).nil?
+    end
+
+    def has_or_inherits_part?(name)
+      has_part?(name) || inherits_part?(name)
+    end
+
+    def inherits_part?(name)
+      !has_part?(name) && self.ancestors.any? { |page| page.has_part?(name) }
+    end
 
     def self.is_descendant_class_name?(class_name)
       (Radiant::Page.descendants.map(&:to_s) + [nil, "", "Page"]).include?(class_name)
