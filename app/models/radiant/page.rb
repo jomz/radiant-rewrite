@@ -54,16 +54,8 @@ module Radiant
       (Radiant::Page.descendants.map(&:to_s) + [nil, "", "Page"]).include?(class_name)
     end
     
-    def parent?
-      !parent.nil?
-    end
-    
     def path
-      if parent?
-        parent.child_path(self)
-      else
-        clean_path(slug)
-      end
+      clean_path(ancestors.map(&:slug).push(slug).join("/"))
     end
 
     def published?
