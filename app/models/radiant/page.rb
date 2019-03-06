@@ -1,5 +1,6 @@
 module Radiant
   class Page < ApplicationRecord
+    has_ancestry
     class MissingRootPageError < StandardError
       def initialize(message = 'Database missing root page'); super end
     end
@@ -8,7 +9,7 @@ module Radiant
     accepts_nested_attributes_for :parts, allow_destroy: true
 
     validates :title, presence: true, length: { maximum: 255 }
-    validates :slug, presence: true, length: { maximum: 100 }, format: %r{\A([-_.A-Za-z0-9]*|/)\z}, uniqueness: { scope: :parent_id }
+    validates :slug, presence: true, length: { maximum: 100 }, format: %r{\A([-_.A-Za-z0-9]*|/)\z}, uniqueness: { scope: :ancestry }
     validates :breadcrumb, presence: true, length: { maximum: 160 }
     validates :status_id, presence: true
     validate :valid_class_name

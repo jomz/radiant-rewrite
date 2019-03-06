@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_02_22_034538) do
+ActiveRecord::Schema.define(version: 2019_03_06_035848) do
 
   create_table "radiant_page_parts", force: :cascade do |t|
     t.string "name"
@@ -27,16 +27,16 @@ ActiveRecord::Schema.define(version: 2019_02_22_034538) do
     t.string "slug", limit: 100
     t.string "breadcrumb", limit: 160
     t.integer "status_id", default: 1, null: false
-    t.integer "parent_id"
     t.datetime "published_at"
     t.boolean "virtual", default: false
     t.integer "lock_version", default: 0
     t.string "class_name", limit: 25
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "ancestry"
+    t.index ["ancestry"], name: "index_radiant_pages_on_ancestry"
     t.index ["class_name"], name: "pages_class_name"
-    t.index ["parent_id"], name: "pages_parent_id"
-    t.index ["slug", "parent_id"], name: "pages_child_slug"
+    t.index ["slug", "ancestry"], name: "pages_child_slug"
     t.index ["virtual", "status_id"], name: "pages_published"
   end
 

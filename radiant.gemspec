@@ -28,6 +28,7 @@ a general purpose content managment system--not merely a blogging engine."
   spec.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
 
   spec.add_dependency "rails", "~> 5.2.2"
+  spec.add_dependency "ancestry"
 
   spec.add_development_dependency "sqlite3"
   spec.add_development_dependency "rspec-rails", "~> 3.8.2"

@@ -55,9 +55,9 @@ module Radiant
       end
 
       it 'is invalid when the same value exists with the same parent' do
-        page.parent_id = 1
+        page.ancestry = 1
         page.save!
-        other = Page.new(attributes_for(:page).merge(parent_id: 1))
+        other = Page.new(attributes_for(:page).merge(ancestry: 1))
         expect{other.save!}.to raise_error(ActiveRecord::RecordInvalid)
         expect(other.errors[:slug]).to include('has already been taken')
       end
@@ -115,10 +115,10 @@ module Radiant
     
     describe '#path' do
 
-      let(:home){ build(:page, slug: '/', published_at: Time.now) }
-      let(:parent){ build(:page, parent: home, slug: 'parent', published_at: Time.now) }
-      let(:child){ build(:page, parent: parent, slug: 'child', published_at: Time.now) }
-      let(:grandchild){ build(:page, parent: child, slug: 'grandchild', published_at: Time.now) }
+      let(:home){ create(:page, slug: '/', published_at: Time.now) }
+      let(:parent){ create(:page, parent: home, slug: 'parent', published_at: Time.now) }
+      let(:child){ create(:page, parent: parent, slug: 'child', published_at: Time.now) }
+      let(:grandchild){ create(:page, parent: child, slug: 'grandchild', published_at: Time.now) }
 
       it "should start with a slash" do
         expect(home.path).to match(/\A\//)

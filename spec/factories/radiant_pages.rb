@@ -55,7 +55,7 @@ FactoryBot.define do
       title { 'Home' }
       slug { '/' }
       status_id { Radiant::Status[:published].id }
-      parent_id { nil }
+      ancestry { nil }
     end
     
   end
