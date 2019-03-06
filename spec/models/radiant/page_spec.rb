@@ -112,5 +112,23 @@ module Radiant
         end
       end
     end
+    
+    describe '#path' do
+
+      let(:home){ build(:page, slug: '/', published_at: Time.now) }
+      let(:parent){ build(:page, parent: home, slug: 'parent', published_at: Time.now) }
+      let(:child){ build(:page, parent: parent, slug: 'child', published_at: Time.now) }
+      let(:grandchild){ build(:page, parent: child, slug: 'grandchild', published_at: Time.now) }
+
+      it "should start with a slash" do
+        expect(home.path).to match(/\A\//)
+      end
+      it "should return a string with the current page's slug catenated with it's ancestor's slugs and delimited by slashes" do
+        expect(grandchild.path).to eq('/parent/child/grandchild/')
+      end
+      it 'should end with a slash' do
+        expect(page.path).to match(/\/\z/)
+      end
+    end
   end
 end
