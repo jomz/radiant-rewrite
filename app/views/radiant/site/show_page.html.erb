@@ -1,0 +1,8 @@
+<% @page.parts.each do |part|
+  content_for part.name.to_sym do %>
+  <%= @page.render_part part.name %>
+<% end
+end %>
+<% content_for :title do %>
+<%= @page.title -%>
+<% end %>

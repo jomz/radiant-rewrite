@@ -5,7 +5,7 @@ module Radiant
     class MissingRootPageError < StandardError
       def initialize(message = 'Database missing root page'); super end
     end
-    
+
     before_save :update_status
 
     has_many :parts, ->{ order(:id) }, class_name: 'Radiant::PagePart', dependent: :destroy
@@ -16,13 +16,13 @@ module Radiant
     validates :breadcrumb, presence: true, length: { maximum: 160 }
     validates :status_id, presence: true
     validate :valid_class_name
-    
+
     self.inheritance_column = 'class_name'
-    
+
     def child_path(child)
       clean_path(path + '/' + child.slug)
     end
-    
+
     def clean_path(path)
       "/#{ path.to_s.strip }/".gsub(%r{//+}, '/')
     end
@@ -52,13 +52,18 @@ module Radiant
         end
       end
     end
-    
+
     def has_part?(name)
       !part(name).nil?
     end
 
     def has_or_inherits_part?(name)
       has_part?(name) || inherits_part?(name)
+    end
+
+    def headers
+      # Return a blank hash that child classes can override or merge
+      { }
     end
 
     def inherits_part?(name)
@@ -68,11 +73,11 @@ module Radiant
     def self.is_descendant_class_name?(class_name)
       (Radiant::Page.descendants.map(&:to_s) + [nil, "", "Page"]).include?(class_name)
     end
-    
+
     def parent?
       !parent.nil?
     end
-    
+
     def part(name)
       if new_record? or parts.to_a.any?(&:new_record?)
         parts.to_a.find {|p| p.name == name.to_s }
@@ -80,7 +85,7 @@ module Radiant
         parts.find_by(name: name.to_s)
       end
     end
-    
+
     def path
       if parent?
         parent.child_path(self)
@@ -92,6 +97,49 @@ module Radiant
     def published?
       status == Status[:published]
     end
+
+    def process(request, response)
+      @request, @response = request, response
+      set_response_headers(@response)
+      @response.body = render
+      @response.status = response_code
+    end
+
+    def render
+      # if layout
+        # parse_object(layout)
+      # else
+        render_part(:body)
+      # end
+    end
+
+    def render_part(part_name)
+      part = part(part_name)
+      if part
+        parse_object(part)
+      else
+        ''
+      end
+    end
+
+    def response_code
+      200
+    end
+
+    def set_response_headers(response)
+      # set_content_type(response)
+      headers.each{|k,v| response.headers[k] = v }
+    end
+    private :set_response_headers
+
+    # def set_content_type(response)
+    #   if layout
+    #     if content_type = layout.content_type.to_s.strip
+    #       response.headers['Content-Type'] = content_type
+    #     end
+    #   end
+    # end
+    # private :set_content_type
 
     def scheduled?
       status == Status[:scheduled]
@@ -127,6 +175,27 @@ module Radiant
         raise MissingRootPageError unless root
         root.find_by_path(path, live)
       end
+    end
+
+    private
+
+    # def lazy_initialize_parser_and_context
+    #   unless @parser and @context
+    #     @context = PageContext.new(self)
+    #     @parser = Radius::Parser.new(@context, tag_prefix: 'r')
+    #   end
+    #   @parser
+    # end
+    #
+    # def parse(text)
+    #   lazy_initialize_parser_and_context(text)
+    # end
+
+    def parse_object(object)
+      text = object.content || ''
+      # text = parse(text)
+      # text = object.filter.filter(text) if object.respond_to? :filter_id
+      text
     end
   end
 end

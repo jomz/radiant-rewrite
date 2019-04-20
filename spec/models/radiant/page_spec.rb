@@ -2,11 +2,18 @@ require 'rails_helper'
 
 module Radiant
   class PageSpecTestPage < Radiant::Page
+    def headers
+      {
+      'cool' => 'beans',
+      'request' => @request.inspect[18..28],
+      'response' => @response.inspect[18..29]
+      }
+    end
   end
-  
+
   RSpec.describe Page, type: :model do
     let(:page){ build :page }
-    
+
     describe 'breadcrumb' do
       it 'is invalid when longer than 160 characters' do
         page.breadcrumb = 'x' * 161
@@ -26,7 +33,7 @@ module Radiant
         expect(page.errors[:breadcrumb]).to be_blank
       end
     end
-    
+
     describe 'slug' do
       it 'is invalid when longer than 100 characters' do
         page.slug = 'x' * 101
@@ -62,7 +69,7 @@ module Radiant
         expect(other.errors[:slug]).to include('has already been taken')
       end
     end
-    
+
     describe 'title' do
       it 'is invalid when longer than 255 characters' do
         page.title = 'x' * 256
@@ -82,7 +89,7 @@ module Radiant
         expect(page.errors[:title]).to be_blank
       end
     end
-    
+
     describe 'class_name' do
       it 'should allow mass assignment for class name' do
         page.attributes = { class_name: 'Radiant::PageSpecTestPage' }
@@ -112,7 +119,7 @@ module Radiant
         end
       end
     end
-    
+
     describe '#path' do
 
       let(:home){ build(:page, slug: '/', published_at: Time.now) }
@@ -130,6 +137,17 @@ module Radiant
         expect(page.path).to match(/\/\z/)
       end
     end
+
+    describe '#child_path' do
+
+      let(:home){ create(:page, slug: '/', published_at: Time.now) }
+      let(:parent){ create(:page, parent: home, slug: 'parent', published_at: Time.now) }
+      let(:child){ create(:page, parent: parent, slug: 'child', published_at: Time.now) }
+
+      it 'should return the #path for the given child' do
+        expect(parent.child_path(child)).to eq('/parent/child/')
+      end
+    end
     
     describe '#parts' do
       it 'should return PageParts with a page_id of the page id' do
@@ -139,7 +157,7 @@ module Radiant
         expect(page.parts.sort_by{|p| p.name }).to eq(Radiant::PagePart.where(page_id: page.id).sort_by{|p| p.name })
       end
     end
-    
+
     it 'should destroy dependant parts' do
       page.save
       page.parts.create(name: 'test')
@@ -148,7 +166,7 @@ module Radiant
       page.destroy
       expect(Radiant::PagePart.find_by_page_id(id)).to be_nil
     end
-    
+
     describe '#part' do
       before do
         page.save
@@ -222,7 +240,7 @@ module Radiant
         expect(page.dirty?).to be true
       end
     end
-    
+
     context 'when setting the published_at date' do
       let(:future){ Time.current + 20.years }
       let(:past){ Time.current - 1.year }
@@ -252,5 +270,78 @@ module Radiant
         expect(page.published_at.to_s(:db)).to eq('2013-05-17 00:00:00')
       end
     end
+
+    context 'when setting the status' do
+      let(:page){ build(:page, status_id: Status[:published].id, published_at: nil) }
+      let(:scheduled){ build(:page, status_id: Status[:scheduled].id, published_at: (Time.current + 1.day)) }
+
+      it 'should set published_at when given the published status id' do
+        page.save
+        expect(page.published_at.utc.day).to eq(Time.now.utc.day)
+      end
+
+      it 'should change its status to draft when set to draft' do
+        scheduled.status_id = Status[:draft].id
+        scheduled.save
+
+        expect(scheduled.status_id).to eq(Status[:draft].id)
+      end
+
+      it 'should not update published_at when already published' do
+        page.save
+
+        page.save
+        expect(page.published_at_changed?).to be false
+      end
+    end
+  end
+
+  describe Page, "processing" do
+    before :all do
+      @request = ActionDispatch::TestRequest.new url: '/page/'
+      @response = ActionDispatch::TestResponse.new
+      @page = build(:page) do |page|
+        page.parts.build(name: 'body', content: 'Hello world!')
+      end
+    end
+
+    it 'should set response body' do
+      @page.process(@request, @response)
+      expect(@response.body).to match(/Hello world!/)
+    end
+
+    it 'should set headers and pass request and response' do
+      @page = PageSpecTestPage.create(attributes_for(:page, title: "Test Page"))
+      @page.process(@request, @response)
+      expect(@response.headers['cool']).to eq('beans')
+      expect(@response.headers['request']).to eq('TestRequest')
+      expect(@response.headers['response']).to eq('TestResponse')
+    end
+
+    xit 'should set content type based on layout' do
+      @page = FactoryGirl.build(:page)
+      @page.layout = FactoryGirl.build(:utf8_layout)
+      @page.process(@request, @response)
+      expect(@response).to be_success
+      expect(@response.headers['Content-Type']).to eq('text/html;charset=utf8')
+    end
+
+    it "should copy custom headers into the response" do
+      allow(@page).to receive(:headers).and_return({"X-Extra-Header" => "This is my header"})
+      @page.process(@request, @response)
+      expect(@response.header['X-Extra-Header']).to eq("This is my header")
+    end
+
+    it "should set a 200 status code by default" do
+      @page.process(@request, @response)
+      expect(@response.response_code).to eq(200)
+    end
+
+    it "should set the response code to the result of the response_code method on the page" do
+      allow(@page).to receive(:response_code).and_return(404)
+      @page.process(@request, @response)
+      expect(@response.response_code).to eq(404)
+    end
+
   end
 end
